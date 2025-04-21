@@ -12,11 +12,19 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('dossiers__medicauxes', function (Blueprint $table) {
-            $table->id();
-            $table->date('dateCreation')->nullable();
-            $table->date('dateModification')->nullable();
-            $table->timestamps();
-        });
+    $table->id();
+    $table->date('dateCreation')->useCurrent();
+    $table->date('dateModification')->nullable();
+    $table->timestamps();
+    $table->unsignedBigInteger('patient_id');
+    $table->foreign('patient_id')
+    ->references('id')
+    ->on('patients')
+    ->onDelete('cascade');
+    
+    // Index pour les recherches par patient
+    //$table->index('patient_id');
+});
     }
 
     /**

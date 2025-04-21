@@ -6,3 +6,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/dicom', [DicomController::class, 'index']);
+    Route::get('/dicom/{orthancId}', [DicomController::class, 'show']);
+});
