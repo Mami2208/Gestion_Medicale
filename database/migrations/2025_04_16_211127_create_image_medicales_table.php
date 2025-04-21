@@ -13,11 +13,15 @@ return new class extends Migration
     {
         Schema::create('image_medicales', function (Blueprint $table) {
             $table->id();
-            $table->string('urlAccess')->nullable();
-            $table->string('typeImage')->nullable();
-            $table->date('dateCreation')->nullable();
-            $table->boolean('isDicom')->default(false);
+            $table->foreignId('dossier_medical_id')
+                  ->constrained('dossiers__medicauxes')
+                  ->onDelete('cascade');
+            $table->string('type_image', 50);
+            $table->boolean('is_dicom')->default(false);
             $table->timestamps();
+        
+            // Index composite pour les requêtes fréquentes
+            $table->index(['dossier_medical_id', 'is_dicom']);
         });
     }
 

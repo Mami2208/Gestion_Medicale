@@ -13,11 +13,20 @@ return new class extends Migration
     {
         Schema::create('image__dicoms', function (Blueprint $table) {
             $table->id();
-            $table->string('orthancId')->nullable();
-            $table->string('serieId')->nullable();
-            $table->string('studyId')->nullable();
-            $table->string('modalite')->nullable();
+            $table->foreignId('image_medicale_id')
+                  ->constrained()
+                  ->onDelete('cascade');
+            $table->string('orthanc_id')->unique();
+            $table->string('study_uid', 128);
+            $table->string('series_uid', 128);
+            $table->string('modality', 20);
+            $table->json('metadata')->nullable();
             $table->timestamps();
+        
+            // Index pour les recherches Orthanc
+            $table->index('orthanc_id');
+            $table->index('study_uid');
+            $table->index(['modality', 'series_uid']);
         });
     }
 
