@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
-[x-cloak] {
-    display: none;
+.dicom-toolbar {
+    @apply bg-gray-800 text-white p-2 rounded-t flex space-x-4;
+}
+
+.dicom-toolbar button {
+    @apply px-3 py-1 hover:bg-gray-700 rounded;
+}
+
+#dicom-viewer {
+    @apply w-full h-96;
+    min-height: 400px;
 }
