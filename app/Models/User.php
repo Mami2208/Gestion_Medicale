@@ -64,4 +64,16 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function patient()
+    {
+        return $this->hasOne(Patient::class)->withDefault([
+            'dossierMedical' => new DossierMedical()
+        ]);
+    }
+
+    public function consultations()
+    {
+        return $this->hasMany(Consultation::class);
+    }
 }

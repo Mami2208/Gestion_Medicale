@@ -8,8 +8,19 @@ class DicomFile implements Rule
 {
     public function passes($attribute, $value)
     {
-        return $value->getClientOriginalExtension() === 'dcm' &&
-            $value->getMimeType() === 'application/dicom';
+        // Relax MIME type check to allow common DICOM MIME types or skip MIME check
+        $extension = $value->getClientOriginalExtension();
+        $mimeType = $value->getMimeType();
+
+        $allowedMimeTypes = [
+            'application/dicom',
+            'application/dicom+json',
+            'application/octet-stream',
+            'application/x-dicom',
+            'application/dicom+xml',
+        ];
+
+        return $extension === 'dcm' && in_array($mimeType, $allowedMimeTypes);
     }
 
     public function message()
