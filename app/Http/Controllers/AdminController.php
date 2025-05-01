@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Utilisateur;
+use App\Models\Hopital;
+use App\Models\LogAccess;
 use Illuminate\Http\Request;
 
 class AdminController extends Controller
@@ -11,10 +13,14 @@ class AdminController extends Controller
     {
         $medecins = Utilisateur::where('role', 'MEDECIN')->get();
         $secretaires = Utilisateur::where('role', 'SECRETAIRE')->get();
+        $totalHopitals = Hopital::count();
+        $totalLogs = LogAccess::count();
 
         return view('admin.dashboard', [
             'totalMedecins' => $medecins->count(),
             'totalSecretaires' => $secretaires->count(),
+            'totalHopitals' => $totalHopitals,
+            'totalLogs' => $totalLogs,
             'medecins' => $medecins,
             'secretaires' => $secretaires,
         ]);
@@ -28,8 +34,19 @@ class AdminController extends Controller
 
     public function createSecretaire()
     {
+        $secretaires = Utilisateur::where('role', 'SECRETAIRE')->get();
         return view('admin.secretaires.create', [
-            'specialites' => config('specialites.medicales')
+            'specialites' => config('specialites.medicales'),
+            'secretaires' => $secretaires,
+        ]);
+    }
+
+    public function createMedecin()
+    {
+        $medecins = Utilisateur::where('role', 'MEDECIN')->get();
+        return view('admin.medecins.create', [
+            'specialites' => config('specialites.medicales'),
+            'medecins' => $medecins,
         ]);
     }
 
