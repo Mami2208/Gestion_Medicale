@@ -57,6 +57,17 @@
 
             <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Ajouter</button>
         </form>
+
+        @if(isset($medecins) && $medecins->count() > 0)
+        <div class="mt-8">
+            <h2 class="text-2xl font-bold mb-4">Liste des médecins</h2>
+            <ul class="list-disc list-inside">
+                @foreach($medecins as $medecin)
+                    <li>{{ $medecin->prenom }} {{ $medecin->nom }} - {{ $medecin->email }}</li>
+                @endforeach
+            </ul>
+        </div>
+        @endif
     </div>
 </div>
 @endsection

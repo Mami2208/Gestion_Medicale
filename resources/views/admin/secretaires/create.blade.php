@@ -44,6 +44,17 @@
 
             <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Créer le secrétaire</button>
         </form>
+
+        @if(isset($secretaires) && $secretaires->count() > 0)
+        <div class="mt-8">
+            <h2 class="text-2xl font-bold mb-4">Liste des secrétaires</h2>
+            <ul class="list-disc list-inside">
+                @foreach($secretaires as $secretaire)
+                    <li>{{ $secretaire->prenom }} {{ $secretaire->nom }} - {{ $secretaire->email }}</li>
+                @endforeach
+            </ul>
+        </div>
+        @endif
     </div>
 </div>
 @endsection
