@@ -1,0 +1,5 @@
+.medical-bg {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.9) 0%, rgba(32, 134, 55, 0.8) 100%), url('/images/backgrounds/medical-bg.jpg');
+    background-size: cover;
+    background-position: center;
+}

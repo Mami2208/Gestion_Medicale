@@ -36,25 +36,33 @@
             </div>
 
             <div class="mb-4">
-                <label for="email" class="block text-gray-700 font-bold mb-2">Téléphone</label>
+                <label for="telephone" class="block text-gray-700 font-bold mb-2">Téléphone</label>
                 <input type="number" name="telephone" id="telephone" value="{{ old('telephone') }}" required class="w-full border border-gray-300 rounded px-3 py-2">
             </div>
 
-            <p class="mb-4 text-gray-600">Un mot de passe par défaut <strong>secret1234</strong> sera attribué au secrétaire créé.</p>
+            <div class="mb-4">
+                <label for="hopital_id" class="block text-gray-700 font-bold mb-2">Hôpital</label>
+                <select name="hopital_id" id="hopital_id" required class="w-full border border-gray-300 rounded px-3 py-2">
+                    @foreach($hopitaux as $hopital)
+                        <option value="{{ $hopital->id }}" {{ old('hopital_id') == $hopital->id ? 'selected' : '' }}>
+                            {{ $hopital->nom }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label for="mot_de_passe" class="block text-gray-700 font-bold mb-2">Mot de passe</label>
+                <input type="password" name="mot_de_passe" id="mot_de_passe" required class="w-full border border-gray-300 rounded px-3 py-2">
+            </div>
+
+            <div class="mb-4">
+                <label for="mot_de_passe_confirmation" class="block text-gray-700 font-bold mb-2">Confirmation du mot de passe</label>
+                <input type="password" name="mot_de_passe_confirmation" id="mot_de_passe_confirmation" required class="w-full border border-gray-300 rounded px-3 py-2">
+            </div>
 
             <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Créer le secrétaire</button>
         </form>
-
-        @if(isset($secretaires) && $secretaires->count() > 0)
-        <div class="mt-8">
-            <h2 class="text-2xl font-bold mb-4">Liste des secrétaires</h2>
-            <ul class="list-disc list-inside">
-                @foreach($secretaires as $secretaire)
-                    <li>{{ $secretaire->prenom }} {{ $secretaire->nom }} - {{ $secretaire->email }}</li>
-                @endforeach
-            </ul>
-        </div>
-        @endif
     </div>
 </div>
 @endsection

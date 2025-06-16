@@ -13,10 +13,15 @@ return new class extends Migration
     {
         Schema::create('consultations', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('patient_id')->constrained('patients')->onDelete('cascade');
+            $table->foreignId('medecin_id')->constrained('medecins')->onDelete('cascade');
             $table->date('date_consultation');
             $table->string('motif')->nullable();
             $table->string('diagnostic')->nullable();
             $table->string('observation')->nullable();
+            $table->decimal('montant', 10, 2)->default(0);
+            $table->string('type')->default('premiere_visite');
+            $table->string('statut')->default('en_cours');
             $table->timestamps();
         });
     }

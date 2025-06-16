@@ -1,0 +1,43 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('delegations_acces', function (Blueprint $table) {
+            $table->unsignedBigInteger('infirmier_id')->after('medecin_id');
+            $table->unsignedBigInteger('patient_id')->after('infirmier_id');
+            $table->string('raison')->nullable()->after('date_fin');
+            
+            // Add foreign key constraints
+            $table->foreign('infirmier_id')
+                  ->references('id')
+                  ->on('utilisateurs')
+                  ->onDelete('cascade');
+                  
+            $table->foreign('patient_id')
+                  ->references('id')
+                  ->on('patients')
+                  ->onDelete('cascade');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('delegations_acces', function (Blueprint $table) {
+            $table->dropForeign(['infirmier_id']);
+            $table->dropForeign(['patient_id']);
+            $table->dropColumn(['infirmier_id', 'patient_id', 'raison']);
+        });
+    }
+};

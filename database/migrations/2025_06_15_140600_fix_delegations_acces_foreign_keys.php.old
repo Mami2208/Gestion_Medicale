@@ -1,0 +1,43 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        // Supprimer d'abord la contrainte existante si elle existe
+        Schema::table('delegations_acces', function (Blueprint $table) {
+            // Vérifier si la contrainte existe avant de la supprimer
+            $sm = Schema::getConnection()->getDoctrineSchemaManager();
+            $indexes = $sm->listTableForeignKeys('delegations_acces');
+            
+            foreach ($indexes as $index) {
+                if ($index->getColumns() === ['infirmier_id']) {
+                    $table->dropForeign(['infirmier_id']);
+                    break;
+                }
+            }
+            
+            // Recréer la contrainte avec la bonne table de référence
+            $table->foreign('infirmier_id')
+                  ->references('id')
+                  ->on('utilisateurs')
+                  ->onDelete('cascade');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        // Ne rien faire ici car on ne peut pas revenir en arrière de manière sûre
+        // car nous ne savons pas quelle était la configuration précédente
+    }
+};

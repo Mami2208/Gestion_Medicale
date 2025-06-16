@@ -1,73 +1,63 @@
 @extends('layouts.app')
 
 @section('content')
-<div>
-    @include('components.admin-sidebar')
+<div class="p-4">
+    <a href="{{ route('admin.medecins.index') }}" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+        Retour à la liste
+    </a>
 
-    <div class="ml-64 container mx-auto px-4">
-        <h1 class="text-3xl font-bold mb-6">Ajouter un Médecin</h1>
-
-        <form action="{{ route('admin.medecins.store') }}" method="POST" class="bg-white p-6 rounded-lg shadow max-w-lg">
+    <div class="bg-white shadow rounded p-6 mt-4">
+        <form action="{{ route('admin.medecins.store') }}" method="POST">
             @csrf
 
             <div class="mb-4">
-                <label for="nom" class="block text-gray-700 font-semibold mb-2">Nom</label>
-                <input type="text" name="nom" id="nom" value="{{ old('nom') }}" required class="w-full border border-gray-300 rounded px-3 py-2">
-                @error('nom')
-                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                @enderror
+                <label for="nom" class="block font-semibold">Nom</label>
+                <input type="text" name="nom" id="nom" class="w-full border rounded p-2" value="{{ old('nom') }}">
             </div>
 
             <div class="mb-4">
-                <label for="prenom" class="block text-gray-700 font-semibold mb-2">Prénom</label>
-                <input type="text" name="prenom" id="prenom" value="{{ old('prenom') }}" required class="w-full border border-gray-300 rounded px-3 py-2">
-                @error('prenom')
-                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                @enderror
+                <label for="prenom" class="block font-semibold">Prénom</label>
+                <input type="text" name="prenom" id="prenom" class="w-full border rounded p-2" value="{{ old('prenom') }}">
             </div>
 
             <div class="mb-4">
-                <label for="email" class="block text-gray-700 font-semibold mb-2">Email</label>
-                <input type="email" name="email" id="email" value="{{ old('email') }}" required class="w-full border border-gray-300 rounded px-3 py-2">
-                @error('email')
-                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                @enderror
+                <label for="email" class="block font-semibold">Email</label>
+                <input type="email" name="email" id="email" class="w-full border rounded p-2" value="{{ old('email') }}">
             </div>
 
             <div class="mb-4">
-                <label for="specialite" class="block text-gray-700 font-semibold mb-2">Spécialité</label>
-                <select name="specialite" id="specialite" required class="w-full border border-gray-300 rounded px-3 py-2">
+                <label for="specialite" class="block font-semibold">Spécialité</label>
+                <select name="specialite" id="specialite" class="w-full border rounded p-2">
                     <option value="">Sélectionnez une spécialité</option>
-                    @foreach ($specialites as $specialite)
-                        <option value="{{ $specialite }}" {{ old('specialite') == $specialite ? 'selected' : '' }}>{{ $specialite }}</option>
+                    @foreach ($specialites as $key => $value)
+                        <option value="{{ $value }}" {{ old('specialite') == $value ? 'selected' : '' }}>
+                            {{ $value }}
+                        </option>
                     @endforeach
                 </select>
-                @error('specialite')
-                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                @enderror
             </div>
 
             <div class="mb-4">
-                <label for="telephone" class="block text-gray-700 font-semibold mb-2">Téléphone</label>
-                <input type="text" name="telephone" id="telephone" value="{{ old('telephone') }}" required class="w-full border border-gray-300 rounded px-3 py-2">
-                @error('telephone')
-                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                @enderror
+                <label for="telephone" class="block font-semibold">Téléphone</label>
+                <input type="text" name="telephone" id="telephone" class="w-full border rounded p-2" value="{{ old('telephone') }}">
             </div>
 
-            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Ajouter</button>
-        </form>
+            <div class="mb-4">
+                <label for="mot_de_passe" class="block font-semibold">Mot de passe</label>
+                <input type="password" name="mot_de_passe" id="mot_de_passe" class="w-full border rounded p-2">
+            </div>
 
-        @if(isset($medecins) && $medecins->count() > 0)
-        <div class="mt-8">
-            <h2 class="text-2xl font-bold mb-4">Liste des médecins</h2>
-            <ul class="list-disc list-inside">
-                @foreach($medecins as $medecin)
-                    <li>{{ $medecin->prenom }} {{ $medecin->nom }} - {{ $medecin->email }}</li>
-                @endforeach
-            </ul>
-        </div>
-        @endif
+            <div class="mb-4">
+                <label for="mot_de_passe_confirmation" class="block font-semibold">Confirmation du mot de passe</label>
+                <input type="password" name="mot_de_passe_confirmation" id="mot_de_passe_confirmation" class="w-full border rounded p-2">
+            </div>
+
+            <div class="mt-6">
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                    Ajouter
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 @endsection

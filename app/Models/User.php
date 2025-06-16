@@ -21,14 +21,28 @@ class User extends Authenticatable
     use TwoFactorAuthenticatable;
 
     /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'utilisateurs';
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
+        'nom',
+        'prenom',
         'email',
-        'password',
+        'mot_de_passe',
+        'telephone',
+        'date_naissance',
+        'sexe',
+        'adresse',
+        'role',
+        'statut'
     ];
 
     /**
@@ -37,7 +51,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $hidden = [
-        'password',
+        'mot_de_passe',
         'remember_token',
         'two_factor_recovery_codes',
         'two_factor_secret',
@@ -61,7 +75,8 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'mot_de_passe' => 'hashed',
+            'date_naissance' => 'date',
         ];
     }
 
@@ -75,5 +90,21 @@ class User extends Authenticatable
     public function consultations()
     {
         return $this->hasMany(Consultation::class);
+    }
+    
+    /**
+     * Relation avec les notifications par rôle
+     */
+    public function roleNotifications()
+    {
+        return $this->hasMany(RoleNotification::class);
+    }
+    
+    /**
+     * Obtenir le nombre de notifications non lues
+     */
+    public function unreadNotificationsCount()
+    {
+        return $this->roleNotifications()->where('lu', false)->count();
     }
 }

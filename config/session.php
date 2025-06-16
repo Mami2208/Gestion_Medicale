@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Config;
 
 return [
 
@@ -18,7 +19,26 @@ return [
     |
     */
 
-    'driver' => env('SESSION_DRIVER', 'database'),
+    'driver' => env('SESSION_DRIVER', 'file'),
+    
+    /*
+    |--------------------------------------------------------------------------
+    | Session Cookie Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Here you may configure the session cookie settings. We recommend using
+    | secure settings for better security and reliability.
+    |
+    */
+    'cookie' => env(
+        'SESSION_COOKIE',
+        Str::slug(env('APP_NAME', 'laravel'), '_').'_session'
+    ),
+    'path' => '/',
+    'domain' => env('SESSION_DOMAIN', null),
+    'secure' => env('SESSION_SECURE_COOKIE', false),
+    'http_only' => true,
+    'same_site' => 'lax',
 
     /*
     |--------------------------------------------------------------------------
@@ -32,9 +52,9 @@ return [
     |
     */
 
-    'lifetime' => (int) env('SESSION_LIFETIME', 120),
+    'lifetime' => (int) env('SESSION_LIFETIME', 120), // en minutes
 
-    'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
+    'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false), // La session expire à la fermeture du navigateur si true
 
     /*
     |--------------------------------------------------------------------------

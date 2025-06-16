@@ -1,0 +1,430 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\MedecinController;
+use App\Http\Controllers\HopitalController;
+use App\Http\Middleware\CheckRole;
+use App\Http\Controllers\SecretaireController;
+use App\Http\Controllers\PatientController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\LogController;
+use App\Http\Controllers\Admin\SecurityController;
+use App\Http\Controllers\Admin\StatisticsController;
+use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\BackupController;
+use App\Http\Controllers\Medecin\DashboardController as MedecinDashboardController;
+use App\Http\Controllers\Medecin\PatientController as MedecinPatientController;
+use App\Http\Controllers\Medecin\DossierController;
+use App\Http\Controllers\Medecin\DicomController;
+use App\Http\Controllers\Medecin\PrescriptionController;
+use App\Http\Controllers\Medecin\NotificationController;
+use App\Http\Controllers\Medecin\HistoriqueController;
+use App\Http\Controllers\Medecin\ConsultationController;
+use App\Http\Controllers\Medecin\ExamenController;
+use App\Http\Controllers\Medecin\ImagerieController;
+use App\Http\Controllers\Medecin\HistoriqueMedicalController;
+use App\Http\Controllers\Medecin\DossierMedicalController;
+
+// Routes publiques
+Route::get('/', function () {
+    return view('welcome');
+});
+
+// Authentification
+Route::controller(LoginController::class)->group(function () {
+    Route::get('/login', 'show')->name('login')->middleware('guest');
+    Route::post('/login', 'login');
+    Route::post('/logout', 'logout')->name('logout')->middleware('auth');
+});
+
+Route::middleware(['auth'])->group(function () {
+    // Routes pour l'interface médecin
+    Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':MEDECIN'])->prefix('medecin')->name('medecin.')->group(function () {
+        // Tableau de bord
+        Route::get('/dashboard', [MedecinDashboardController::class, 'index'])->name('dashboard');
+        
+        // Rendez-vous
+        Route::get('/rendez-vous', [MedecinController::class, 'rendezVousIndex'])->name('rendez-vous.index');
+        Route::get('/rendez-vous/create', [MedecinController::class, 'rendezVousCreate'])->name('rendez-vous.create');
+        Route::post('/rendez-vous', [MedecinController::class, 'rendezVousStore'])->name('rendez-vous.store');
+        Route::get('/rendez-vous/{rendezVous}', [MedecinController::class, 'rendezVousShow'])->name('rendez-vous.show');
+        Route::get('/rendez-vous/{rendezVous}/edit', [MedecinController::class, 'rendezVousEdit'])->name('rendez-vous.edit');
+        Route::put('/rendez-vous/{rendezVous}', [MedecinController::class, 'rendezVousUpdate'])->name('rendez-vous.update');
+        Route::delete('/rendez-vous/{rendezVous}', [MedecinController::class, 'rendezVousDestroy'])->name('rendez-vous.destroy');
+        
+        // Consultations
+        Route::resource('consultations', ConsultationController::class);
+        
+        // DICOM intégré aux consultations
+        Route::get('/consultations/{consultation}/dicom', [ConsultationController::class, 'dicomViewer'])->name('consultations.dicom.viewer');
+        Route::get('/consultations/{consultation}/dicom/studies', [ConsultationController::class, 'getPatientStudies'])->name('consultations.dicom.studies');
+        Route::get('/consultations/{consultation}/dicom/study/{studyId}/images', [ConsultationController::class, 'getStudyImages'])->name('consultations.dicom.images');
+        Route::get('/consultations/{consultation}/dicom/preview/{instanceId}', [ConsultationController::class, 'getImagePreview'])->name('consultations.dicom.preview');
+        Route::get('/consultations/{consultation}/dicom/image/{instanceId}', [ConsultationController::class, 'getImage'])->name('consultations.dicom.image');
+        
+        
+        // Patients
+        Route::resource('patients', MedecinPatientController::class);
+        
+        // Dossiers médicaux
+        Route::get('/dossiers', [DossierController::class, 'index'])->name('dossiers.index');
+        Route::get('/dossiers/create', [DossierController::class, 'create'])->name('dossiers.create');
+        Route::post('/dossiers', [DossierController::class, 'store'])->name('dossiers.store');
+        Route::get('/dossiers/{dossier}', [DossierController::class, 'show'])->name('dossiers.show');
+        Route::get('/dossiers/{dossier}/edit', [DossierController::class, 'edit'])->name('dossiers.edit');
+        Route::put('/dossiers/{dossier}', [DossierController::class, 'update'])->name('dossiers.update');
+        Route::delete('/dossiers/{dossier}', [DossierController::class, 'destroy'])->name('dossiers.destroy');
+        
+        // DICOM
+        Route::get('/dicom/test', [DicomController::class, 'testConnection'])->name('dicom.test');
+        Route::get('/dicom/config', [DicomController::class, 'testOrthancConfig'])->name('dicom.config');
+        Route::get('/dicom', [DicomController::class, 'index'])->name('dicom.index');
+        Route::get('/dicom/viewer', [DicomController::class, 'viewer'])->name('medecin.dicom.viewer');
+        
+        // Images DICOM
+        Route::get('/dicom/studies/{patient}', [DicomController::class, 'getPatientStudies'])->name('dicom.studies');
+        Route::get('/dicom/images/{study}', [DicomController::class, 'getStudyImages'])->name('dicom.images');
+        Route::get('/dicom/preview/{instance}', [DicomController::class, 'getImagePreview'])->name('dicom.preview');
+        Route::get('/dicom/download/{instance}', [DicomController::class, 'getImage'])->name('dicom.download');
+        
+        // Prescriptions
+        Route::resource('prescriptions', PrescriptionController::class);
+        
+        // Notifications
+        Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+        
+        // Statistiques
+        Route::get('/statistiques', [MedecinController::class, 'statistiques'])->name('statistiques.index');
+        
+        // Historique
+        Route::get('/historique', [HistoriqueController::class, 'index'])->name('historique.index');
+        Route::get('/historique/consultation/{consultation}', [HistoriqueController::class, 'showConsultation'])->name('historique.consultation');
+        Route::get('/historique/examen/{examen}', [HistoriqueController::class, 'showExamen'])->name('historique.examen');
+        Route::get('/historique/prescription/{prescription}', [HistoriqueController::class, 'showPrescription'])->name('historique.prescription');
+        
+        // Examens
+        Route::resource('examens', ExamenController::class);
+        
+        // Imagerie DICOM
+        Route::resource('imagerie', ImagerieController::class);
+        Route::get('/imagerie/{imagerie}/viewer', [ImagerieController::class, 'viewer'])->name('imagerie.viewer');
+        
+        // Paramètres
+        Route::get('/parametres', [MedecinController::class, 'parametres'])->name('parametres.index');
+        Route::put('/parametres', [MedecinController::class, 'parametresUpdate'])->name('parametres.update');
+        Route::put('/parametres/profil', [MedecinController::class, 'profilUpdate'])->name('parametres.profil.update');
+        Route::put('/parametres/password', [MedecinController::class, 'passwordUpdate'])->name('parametres.password.update');
+        Route::put('/parametres/preferences', [MedecinController::class, 'preferencesUpdate'])->name('parametres.preferences.update');
+
+        // Profil
+        Route::get('/profile', [MedecinController::class, 'profile'])->name('profile.index');
+        Route::get('/profile/edit', [MedecinController::class, 'profileEdit'])->name('profile.edit');
+        Route::put('/profile', [MedecinController::class, 'profileUpdate'])->name('profile.update');
+
+        // Routes pour l'historique médical
+        Route::prefix('historique-medical')->group(function () {
+            Route::get('create/{patient}', [HistoriqueMedicalController::class, 'create'])
+                ->name('medecin.historique-medical.create');
+            Route::post('store/{patient}', [HistoriqueMedicalController::class, 'store'])
+                ->name('medecin.historique-medical.store');
+        });
+
+        // Routes pour les dossiers médicaux
+        Route::prefix('dossiers-medicaux')->name('dossiers-medicaux.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Medecin\DossierMedicalController::class, 'index'])->name('index');
+            Route::get('create', [\App\Http\Controllers\Medecin\DossierMedicalController::class, 'create'])->name('create');
+            Route::post('store', [\App\Http\Controllers\Medecin\DossierMedicalController::class, 'store'])->name('store');
+            Route::get('{dossier}', [\App\Http\Controllers\Medecin\DossierMedicalController::class, 'show'])->name('show');
+        });
+    });
+
+    // Routes pour l'interface secrétaire
+    Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':SECRETAIRE'])->prefix('secretaire')->name('secretaire.')->group(function () {
+        // Tableau de bord
+        Route::get('/dashboard', [SecretaireController::class, 'dashboard'])->name('dashboard');
+        
+        // Patients
+        Route::get('/patients', [SecretaireController::class, 'patients'])->name('patients.index');
+        Route::get('/patients/create', [SecretaireController::class, 'createPatient'])->name('patients.create');
+        Route::post('/patients', [SecretaireController::class, 'storePatient'])->name('patients.store');
+        Route::get('/patients/{patient}', [SecretaireController::class, 'showPatient'])->name('patients.show');
+        Route::get('/patients/{patient}/edit', [SecretaireController::class, 'editPatient'])->name('patients.edit');
+        Route::put('/patients/{patient}', [SecretaireController::class, 'updatePatient'])->name('patients.update');
+        Route::delete('/patients/{patient}', [SecretaireController::class, 'deletePatient'])->name('patients.destroy');
+        
+        // Dossiers médicaux
+        Route::get('/dossiers-medicaux', [SecretaireController::class, 'dossiers'])->name('dossiers-medicaux.index');
+        Route::get('/dossiers-medicaux/create', [SecretaireController::class, 'createDossier'])->name('dossiers-medicaux.create');
+        Route::post('/dossiers-medicaux', [SecretaireController::class, 'storeDossier'])->name('dossiers-medicaux.store');
+        Route::get('/dossiers-medicaux/{dossier}', [SecretaireController::class, 'showDossier'])->name('dossiers-medicaux.show');
+        Route::get('/dossiers-medicaux/{dossier}/edit', [SecretaireController::class, 'editDossier'])->name('dossiers-medicaux.edit');
+        Route::put('/dossiers-medicaux/{dossier}', [SecretaireController::class, 'updateDossier'])->name('dossiers-medicaux.update');
+        Route::delete('/dossiers-medicaux/{dossier}', [SecretaireController::class, 'deleteDossier'])->name('dossiers-medicaux.destroy');
+        
+        // Rendez-vous
+        Route::get('/rendez-vous', [SecretaireController::class, 'rendezVous'])->name('rendez-vous.index');
+        Route::get('/rendez-vous/create', [SecretaireController::class, 'createRendezVous'])->name('rendez-vous.create');
+        Route::post('/rendez-vous', [SecretaireController::class, 'storeRendezVous'])->name('rendez-vous.store');
+        Route::get('/rendez-vous/{id}', [SecretaireController::class, 'showRendezVous'])->name('rendez-vous.show');
+        Route::get('/rendez-vous/{id}/edit', [SecretaireController::class, 'editRendezVous'])->name('rendez-vous.edit');
+        Route::put('/rendez-vous/{id}', [SecretaireController::class, 'updateRendezVous'])->name('rendez-vous.update');
+        Route::delete('/rendez-vous/{id}', [SecretaireController::class, 'deleteRendezVous'])->name('rendez-vous.destroy');
+        
+        // Notifications
+        Route::get('/notifications', [SecretaireController::class, 'notifications'])->name('notifications.index');
+        Route::post('/notifications/{notificationId}/read', [SecretaireController::class, 'markAsRead'])->name('notifications.mark-as-read');
+        Route::delete('/notifications/{id}', [SecretaireController::class, 'supprimerNotification'])->name('notifications.delete');
+        
+        // Profil
+        Route::get('/profile', [SecretaireController::class, 'profile'])->name('profile');
+        Route::get('/profile/edit', [SecretaireController::class, 'editProfile'])->name('profile.edit');
+        Route::post('/profile/update', [SecretaireController::class, 'updateProfile'])->name('profile.update');
+        Route::post('/profile/update-password', [SecretaireController::class, 'updatePassword'])->name('profile.update-password');
+        
+        // Recherche globale
+        Route::get('/search', [SecretaireController::class, 'search'])->name('search');
+    });
+
+    // Routes pour l'interface infirmier
+    Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':INFIRMIER'])->prefix('infirmier')->name('infirmier.')->group(function () {
+        // Tableau de bord
+        Route::get('/dashboard', [\App\Http\Controllers\InfirmierController::class, 'dashboard'])->name('dashboard');
+        
+        // Gestion des patients
+        Route::get('/patients', [\App\Http\Controllers\InfirmierController::class, 'patientsIndex'])->name('patients.index');
+        Route::get('/patients/{id}', [\App\Http\Controllers\InfirmierController::class, 'patientShow'])->name('patients.show');
+        
+        // Gestion des traitements
+        Route::get('/traitements', [\App\Http\Controllers\InfirmierController::class, 'traitementsIndex'])->name('traitements.index');
+        
+        // Alertes patients u00e0 risque
+        Route::get('/alertes', [\App\Http\Controllers\InfirmierController::class, 'alertesIndex'])->name('alertes.index');
+        
+        // Notifications
+        Route::get('/notifications', [\App\Http\Controllers\InfirmierController::class, 'notificationsIndex'])->name('notifications.index');
+        Route::post('/notifications/{id}/read', [\App\Http\Controllers\InfirmierController::class, 'markNotificationAsRead'])->name('notifications.read');
+    });
+
+    // Dashboard Patient
+    Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':PATIENT'])->prefix('patient')->group(function () {
+        Route::get('/dashboard', [PatientController::class, 'dashboard'])->name('patient.dashboard');
+        Route::get('/profile', [PatientController::class, 'profile'])->name('patient.profile');
+        Route::post('/profile/update', [PatientController::class, 'updateProfile'])->name('patient.profile.update');
+        Route::post('/profile/password', [PatientController::class, 'updatePassword'])->name('patient.password.update');
+        Route::get('/appointments', [PatientController::class, 'appointments'])->name('patient.appointments');
+        Route::get('/medical-records', [PatientController::class, 'medicalRecords'])->name('patient.medical_records');
+        
+        // Routes pour l'accès aux images DICOM
+        Route::get('/dicom/viewer', [PatientController::class, 'dicomViewer'])->name('patient.dicom.viewer');
+        Route::get('/dicom/my-studies', [PatientController::class, 'getMyStudies'])->name('patient.dicom.studies');
+        Route::get('/dicom/study/{studyId}/images', [PatientController::class, 'getStudyImages'])->name('patient.dicom.images');
+        Route::get('/dicom/preview/{instanceId}', [PatientController::class, 'getImagePreview'])->name('patient.dicom.preview');
+        Route::get('/dicom/image/{instanceId}', [PatientController::class, 'getImage'])->name('patient.dicom.image');
+    });
+
+    // Administration (réservé aux ADMIN)
+    Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':ADMIN'])->prefix('admin')->name('admin.')->group(function () {
+        // Dashboard
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        
+        // Gestion des utilisateurs
+        Route::get('/users', [UserController::class, 'index'])->name('users');
+        Route::get('/users/search', [UserController::class, 'search'])->name('users.search');
+        Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
+        Route::post('/users', [UserController::class, 'store'])->name('users.store');
+        Route::get('/users/{user}', [UserController::class, 'show'])->name('users.show');
+        Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+        Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
+        Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+
+        // Gestion des médecins
+        Route::controller(MedecinController::class)->prefix('medecins')->group(function () {
+            Route::get('/', 'index')->name('medecins.index');
+            Route::get('/create', 'create')->name('medecins.create');
+            Route::post('/', 'store')->name('medecins.store');
+        });
+
+        // Gestion des secrétaires
+        Route::prefix('secretaires')->group(function () {
+            Route::get('/', [AdminController::class, 'indexSecretaires'])->name('secretaires.index');
+            Route::get('/create', [AdminController::class, 'createSecretaire'])->name('secretaires.create');
+            Route::post('/', [AdminController::class, 'storeSecretaire'])->name('secretaires.store');
+        });
+
+        // Gestion des infirmiers
+        Route::prefix('infirmiers')->group(function () {
+            Route::get('/', [AdminController::class, 'indexInfirmiers'])->name('infirmiers.index');
+            Route::get('/create', [AdminController::class, 'createInfirmier'])->name('infirmiers.create');
+            Route::post('/', [AdminController::class, 'storeInfirmier'])->name('infirmiers.store');
+        });
+
+        // Gestion des hôpitaux
+        Route::prefix('hopitaux')->group(function () {
+            Route::get('/', [HopitalController::class, 'index'])->name('hopitaux.index');
+            Route::get('/create', [HopitalController::class, 'create'])->name('hopitaux.create');
+            Route::post('/', [HopitalController::class, 'store'])->name('hopitaux.store');
+            Route::get('/{hopital}/edit', [HopitalController::class, 'edit'])->name('hopitaux.edit');
+        });
+
+        // Logs
+        Route::get('/logs', [LogController::class, 'index'])->name('logs');
+        Route::get('/logs/export', [LogController::class, 'export'])->name('logs.export');
+        
+});
+
+// Routes pour les dossiers médicaux
+Route::prefix('dossiers-medicaux')->name('dossiers-medicaux.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Medecin\DossierMedicalController::class, 'index'])->name('index');
+    Route::get('create', [\App\Http\Controllers\Medecin\DossierMedicalController::class, 'create'])->name('create');
+    Route::post('store', [\App\Http\Controllers\Medecin\DossierMedicalController::class, 'store'])->name('store');
+    Route::get('{dossier}', [\App\Http\Controllers\Medecin\DossierMedicalController::class, 'show'])->name('show');
+});
+
+// Routes pour l'interface secrétaire
+Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':SECRETAIRE'])->prefix('secretaire')->name('secretaire.')->group(function () {
+    // Tableau de bord
+    Route::get('/dashboard', [SecretaireController::class, 'dashboard'])->name('dashboard');
+    
+    // Patients
+    Route::get('/patients', [SecretaireController::class, 'patients'])->name('patients.index');
+    Route::get('/patients/create', [SecretaireController::class, 'createPatient'])->name('patients.create');
+    Route::post('/patients', [SecretaireController::class, 'storePatient'])->name('patients.store');
+    Route::get('/patients/{patient}', [SecretaireController::class, 'showPatient'])->name('patients.show');
+    Route::get('/patients/{patient}/edit', [SecretaireController::class, 'editPatient'])->name('patients.edit');
+    Route::put('/patients/{patient}', [SecretaireController::class, 'updatePatient'])->name('patients.update');
+    Route::delete('/patients/{patient}', [SecretaireController::class, 'deletePatient'])->name('patients.destroy');
+    
+    // Dossiers médicaux
+    Route::get('/dossiers-medicaux', [SecretaireController::class, 'dossiers'])->name('dossiers-medicaux.index');
+    Route::get('/dossiers-medicaux/create', [SecretaireController::class, 'createDossier'])->name('dossiers-medicaux.create');
+    Route::post('/dossiers-medicaux', [SecretaireController::class, 'storeDossier'])->name('dossiers-medicaux.store');
+    Route::get('/dossiers-medicaux/{dossier}', [SecretaireController::class, 'showDossier'])->name('dossiers-medicaux.show');
+    Route::get('/dossiers-medicaux/{dossier}/edit', [SecretaireController::class, 'editDossier'])->name('dossiers-medicaux.edit');
+    Route::put('/dossiers-medicaux/{dossier}', [SecretaireController::class, 'updateDossier'])->name('dossiers-medicaux.update');
+    Route::delete('/dossiers-medicaux/{dossier}', [SecretaireController::class, 'deleteDossier'])->name('dossiers-medicaux.destroy');
+    
+    // Rendez-vous
+    Route::get('/rendez-vous', [SecretaireController::class, 'rendezVous'])->name('rendez-vous.index');
+    Route::get('/rendez-vous/create', [SecretaireController::class, 'createRendezVous'])->name('rendez-vous.create');
+    Route::post('/rendez-vous', [SecretaireController::class, 'storeRendezVous'])->name('rendez-vous.store');
+    Route::get('/rendez-vous/{id}', [SecretaireController::class, 'showRendezVous'])->name('rendez-vous.show');
+    Route::get('/rendez-vous/{id}/edit', [SecretaireController::class, 'editRendezVous'])->name('rendez-vous.edit');
+    Route::put('/rendez-vous/{id}', [SecretaireController::class, 'updateRendezVous'])->name('rendez-vous.update');
+    Route::delete('/rendez-vous/{id}', [SecretaireController::class, 'deleteRendezVous'])->name('rendez-vous.destroy');
+    
+    // Notifications
+    Route::get('/notifications', [SecretaireController::class, 'notifications'])->name('notifications.index');
+    Route::post('/notifications/{notificationId}/read', [SecretaireController::class, 'markAsRead'])->name('notifications.mark-as-read');
+    Route::delete('/notifications/{id}', [SecretaireController::class, 'supprimerNotification'])->name('notifications.delete');
+    
+    // Profil
+    Route::get('/profile', [SecretaireController::class, 'profile'])->name('profile');
+    Route::get('/profile/edit', [SecretaireController::class, 'editProfile'])->name('profile.edit');
+    Route::post('/profile/update', [SecretaireController::class, 'updateProfile'])->name('profile.update');
+    Route::post('/profile/update-password', [SecretaireController::class, 'updatePassword'])->name('profile.update-password');
+    
+    // Recherche globale
+    Route::get('/search', [SecretaireController::class, 'search'])->name('search');
+});
+
+// Routes pour l'interface infirmier
+Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':INFIRMIER'])->prefix('infirmier')->name('infirmier.')->group(function () {
+    // Tableau de bord
+    Route::get('/dashboard', [\App\Http\Controllers\InfirmierController::class, 'dashboard'])->name('dashboard');
+    
+    // Gestion des patients
+    Route::get('/patients', [\App\Http\Controllers\InfirmierController::class, 'patientsIndex'])->name('patients.index');
+    Route::get('/patients/{id}', [\App\Http\Controllers\InfirmierController::class, 'patientShow'])->name('patients.show');
+    
+    // Gestion des traitements
+    Route::get('/traitements', [\App\Http\Controllers\InfirmierController::class, 'traitementsIndex'])->name('traitements.index');
+    
+    // Alertes patients à risque
+    Route::get('/alertes', [\App\Http\Controllers\InfirmierController::class, 'alertesIndex'])->name('alertes.index');
+    
+    // Notifications
+    Route::get('/notifications', [\App\Http\Controllers\InfirmierController::class, 'notificationsIndex'])->name('notifications.index');
+    Route::post('/notifications/{id}/read', [\App\Http\Controllers\InfirmierController::class, 'markNotificationAsRead'])->name('notifications.read');
+});
+
+// Dashboard Patient
+Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':PATIENT'])->prefix('patient')->group(function () {
+    Route::get('/dashboard', [PatientController::class, 'dashboard'])->name('patient.dashboard');
+    Route::get('/profile', [PatientController::class, 'profile'])->name('patient.profile');
+    Route::post('/profile/update', [PatientController::class, 'updateProfile'])->name('patient.profile.update');
+    Route::post('/profile/password', [PatientController::class, 'updatePassword'])->name('patient.password.update');
+    Route::get('/appointments', [PatientController::class, 'appointments'])->name('patient.appointments');
+    Route::get('/medical-records', [PatientController::class, 'medicalRecords'])->name('patient.medical_records');
+    
+    // Routes pour l'accès aux images DICOM
+    Route::get('/dicom/viewer', [PatientController::class, 'dicomViewer'])->name('patient.dicom.viewer');
+    Route::get('/dicom/my-studies', [PatientController::class, 'getMyStudies'])->name('patient.dicom.studies');
+    Route::get('/dicom/study/{studyId}/images', [PatientController::class, 'getStudyImages'])->name('patient.dicom.images');
+    Route::get('/dicom/preview/{instanceId}', [PatientController::class, 'getImagePreview'])->name('patient.dicom.preview');
+    Route::get('/dicom/image/{instanceId}', [PatientController::class, 'getImage'])->name('patient.dicom.image');
+});
+
+// Administration (réservé aux ADMIN)
+Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':ADMIN'])->prefix('admin')->name('admin.')->group(function () {
+    // Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // Gestion des utilisateurs
+    Route::get('/users', [UserController::class, 'index'])->name('users');
+    Route::get('/users/search', [UserController::class, 'search'])->name('users.search');
+    Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
+    Route::post('/users', [UserController::class, 'store'])->name('users.store');
+    Route::get('/users/{user}', [UserController::class, 'show'])->name('users.show');
+    Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+    Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
+    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+
+    // Gestion des médecins
+    Route::controller(MedecinController::class)->prefix('medecins')->group(function () {
+        Route::get('/', 'index')->name('medecins.index');
+        Route::get('/create', 'create')->name('medecins.create');
+        Route::post('/', 'store')->name('medecins.store');
+    });
+
+    // Gestion des secrétaires
+    Route::prefix('secretaires')->group(function () {
+        Route::get('/', [AdminController::class, 'indexSecretaires'])->name('secretaires.index');
+        Route::get('/create', [AdminController::class, 'createSecretaire'])->name('secretaires.create');
+        Route::post('/', [AdminController::class, 'storeSecretaire'])->name('secretaires.store');
+    });
+
+    // Gestion des infirmiers
+    Route::prefix('infirmiers')->group(function () {
+        Route::get('/', [AdminController::class, 'indexInfirmiers'])->name('infirmiers.index');
+        Route::get('/create', [AdminController::class, 'createInfirmier'])->name('infirmiers.create');
+        Route::post('/', [AdminController::class, 'storeInfirmier'])->name('infirmiers.store');
+    });
+
+    // Gestion des hôpitaux
+    Route::prefix('hopitaux')->group(function () {
+        Route::get('/', [HopitalController::class, 'index'])->name('hopitaux.index');
+        Route::get('/create', [HopitalController::class, 'create'])->name('hopitaux.create');
+        Route::post('/', [HopitalController::class, 'store'])->name('hopitaux.store');
+        Route::get('/{hopital}/edit', [HopitalController::class, 'edit'])->name('hopitaux.edit');
+    });
+
+    // Logs
+    Route::get('/logs', [LogController::class, 'index'])->name('logs');
+    Route::get('/logs/export', [LogController::class, 'export'])->name('logs.export');
+    
+    // Activity Logs
+    Route::get('/activity-logs', [\App\Http\Controllers\Admin\ActivityLogController::class, 'index'])->name('activity-logs.index');
+    Route::get('/activity-logs/search', [\App\Http\Controllers\Admin\ActivityLogController::class, 'search'])->name('activity-logs.search');
+});
+
+// Routes pour les dossiers médicaux
+Route::prefix('dossiers-medicaux')->name('dossiers-medicaux.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Medecin\DossierMedicalController::class, 'index'])->name('index');
+});
+
+// Route directe pour les journaux d'activité (pour dépannage)
+Route::get('/admin/activity-logs-direct', [\App\Http\Controllers\Admin\ActivityLogController::class, 'index']);

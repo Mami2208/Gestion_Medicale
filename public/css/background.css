@@ -1,0 +1,24 @@
+/* Styles pour les images d'arrière-plan */
+
+/* Page d'accueil - Hero section */
+.hero-section {
+    background: url('../images/medical-background.jpg') center/cover no-repeat !important;
+    position: relative;
+}
+
+.hero-section::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-image: linear-gradient(135deg, rgba(56, 161, 105, 0.8) 0%, rgba(39, 103, 73, 0.8) 100%) !important;
+    z-index: 0;
+}
+
+/* Page de connexion */
+.login-image {
+    background: linear-gradient(to right, rgba(45, 134, 89, 0.7), rgba(39, 103, 73, 0.7)), 
+                url('../images/doctor-background.jpg') center/cover no-repeat !important;
+}
